@@ -1,31 +1,61 @@
 package task.automation;
+import io.github.bonigarcia.wdm.WebDriverManager;
+import org.junit.Test;
+import org.junit.runners.Parameterized;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import org.junit.Assert;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.interactions.Actions;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Optional;
+import utils.Config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import org.testng.annotations.Parameters;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Optional;
 
 public class TaskExampleTest {
 
     public static final String INSIDER_LINK = "https://useinsider.com/";
     public static final String INSIDER_CAREERS_QA = "https://useinsider.com/careers/quality-assurance/";
 
-    public static void main(String[] args) {
+    //    public static void main(String[] args) {
+    public WebDriver driver;
+    private final Properties config = Config.loadProperties("test.properties");
 
-        System.setProperty("webdriver.chrome.driver", "C:\\TOOLS\\DRIVERS\\chromedriver.exe");
+//        System.setProperty("webdriver.chrome.driver", "C:\\TOOLS\\DRIVERS\\chromedriver.exe");
 //        System.setProperty("webdriver.chrome.driver", System.getenv("CHROMEDRIVER"));
 
-        WebDriver driver = new ChromeDriver();
-
-
-        // 1. Test that Insider page is opened
-        driver.manage().timeouts().pageLoadTimeout(30, TimeUnit.MINUTES);
+    @Parameters("browser")
+    @BeforeMethod(alwaysRun = true)
+    public void setup(@Optional("chrome") String browser) {
+        if (browser.toLowerCase().equals("chrome")) {
+            WebDriverManager
+                    .chromedriver()
+                    .version(config.getProperty("chromedriver.version"))
+                    .setup();
+            driver = new ChromeDriver();
+        } else if (browser.toLowerCase().equals("firefox")) {
+            WebDriverManager.firefoxdriver().setup();
+            driver = new FirefoxDriver();
+        }
+        driver.manage().timeouts().pageLoadTimeout(20, TimeUnit.SECONDS);
+        driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
         driver.manage().window().maximize();
-        driver.navigate().to(INSIDER_LINK);
+    }
+
+
+    @Test
+    public void generalUserCase() {
+        // 1. Test that Insider page is opened
+        driver.get(config.getProperty("insiderLink"));
         Assert.assertNotNull(driver.getTitle());
 
         //2. Test Career page
@@ -47,11 +77,11 @@ public class TaskExampleTest {
 //        driver.findElement(By.xpath("//span[contains(@aria-activedescendant, 'select2-filter-by-location-result-i4v9-Istanbul, Turkey')]")).click();
 
         List<WebElement> positionsEnum = driver.findElements(By.xpath("//div[contains(@class, 'position-list-item-wrapper')]"));
-        Assert.assertTrue("There are more then 0 positions", positionsEnum.size()>0);
+        Assert.assertTrue("There are more then 0 positions", positionsEnum.size() > 0);
 
         //4. Test positions, department and location is related to QA
 
-        for (WebElement position: positionsEnum) {
+        for (WebElement position : positionsEnum) {
             //Checking Position Title
             WebElement positionTitle = position.findElement(By.xpath("//p[contains(@class, 'position-title')]"));
             Assert.assertTrue(positionTitle.getAttribute("innerHTML").contains("Quality Assurance"));
@@ -90,9 +120,11 @@ public class TaskExampleTest {
         String jobPageTitle = jobPageHeader.getText();
         //Compare Job title and Job position title are equal
         Assert.assertEquals("Titles on page and on job offer are not the same", jobTitle, jobPageTitle);
+    }
 
-
-        driver.quit();
+        @AfterMethod
+        public void cleanup() {
+            driver.quit();
     }
 
 }
