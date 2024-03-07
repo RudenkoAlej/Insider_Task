@@ -2,8 +2,8 @@ package task.automation;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 
-import org.junit.Assert;
 import org.openqa.selenium.interactions.Actions;
+import org.testng.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,13 +17,13 @@ public class TaskExampleTest {
     public static void main(String[] args) {
 
         System.setProperty("webdriver.chrome.driver", "C:\\TOOLS\\DRIVERS\\chromedriver.exe");
-//        System.setProperty("webdriver.chrome.driver", System.getenv("CHROMEDRIVER"));
 
         WebDriver driver = new ChromeDriver();
 
 
         // 1. Test that Insider page is opened
         driver.manage().timeouts().pageLoadTimeout(30, TimeUnit.MINUTES);
+        driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
         driver.manage().window().maximize();
         driver.navigate().to(INSIDER_LINK);
         Assert.assertNotNull(driver.getTitle());
@@ -39,21 +39,71 @@ public class TaskExampleTest {
         driver.navigate().to(INSIDER_CAREERS_QA);
         driver.findElement(By.linkText("Only Necessary")).click();
         driver.findElement(By.linkText("See all QA jobs")).click();
-        driver.findElement(By.xpath("//b[contains(@role, 'presentation')]")).click();
-        // Following 2 lines is a workround to see all the items list (without this only All option is reachable)
-        driver.findElement(By.xpath("//b[contains(@role, 'presentation')]")).click();
-        driver.findElement(By.xpath("//b[contains(@role, 'presentation')]")).click();
-        //To do: find way to select dinamic web element from the list
-//        driver.findElement(By.xpath("//span[contains(@aria-activedescendant, 'select2-filter-by-location-result-i4v9-Istanbul, Turkey')]")).click();
+
+        boolean locationOptionAbsent = true;
+
+        while (locationOptionAbsent) {
+            WebElement locationFilterSelectedOption = driver.findElement(By.xpath("//*[@name='filter-by-location']/following-sibling::span//*[@class='select2-selection__rendered']"));
+            if (!locationFilterSelectedOption.getAttribute("title").contains("Istanbul, Turkey"))
+            {
+                driver.findElement(By.xpath("//*[@name='filter-by-location']/following-sibling::span//b[contains(@role, 'presentation')]")).click();
+                try {
+                    WebElement locationFilterOptionToSelect = driver.findElement(By.xpath("//li[contains(text(), 'Istanbul, Turkey')]"));
+                    locationFilterOptionToSelect.click();
+                    locationOptionAbsent = false;
+                } catch (org.openqa.selenium.NoSuchElementException e) {
+                    e.printStackTrace();
+                    driver.findElement(By.xpath("//*[@name='filter-by-location']/following-sibling::span//b[contains(@role, 'presentation')]")).click();
+                }
+            } else {
+                System.out.println("Expected location is already selected");
+                locationOptionAbsent = false;
+            }
+
+        }
+
+        boolean departmentOptionAbsent = true;
+
+
+
+        while (departmentOptionAbsent){
+            WebElement departmentFilterSelectedOption = driver.findElement(By.xpath("//*[@name='filter-by-department']/following-sibling::span//*[@class='select2-selection__rendered']"));
+            if (!departmentFilterSelectedOption.getAttribute("title").contains("Quality Assurance"))
+            {
+                driver.findElement(By.xpath("//*[@name='filter-by-department']/following-sibling::span//b[contains(@role, 'presentation')]")).click();
+                try {
+                    WebElement locationFilterOptionToSelect = driver.findElement(By.xpath("//li[contains(text(), 'Quality Assurance')]"));
+                    locationFilterOptionToSelect.click();
+                    departmentOptionAbsent = false;
+                } catch (org.openqa.selenium.NoSuchElementException e) {
+                    e.printStackTrace();
+                    driver.findElement(By.xpath("//*[@name='filter-by-department']/following-sibling::span//b[contains(@role, 'presentation')]")).click();
+                }
+            } else {
+                System.out.println("Expected department is already selected");
+                departmentOptionAbsent = false;
+            }
+
+        }
+
+        //Scroll to be able see/reach jobs elements
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("window.scrollBy(0,500)", "");
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e1) {
+            e1.printStackTrace();
+        }
 
         List<WebElement> positionsEnum = driver.findElements(By.xpath("//div[contains(@class, 'position-list-item-wrapper')]"));
-        Assert.assertTrue("There are more then 0 positions", positionsEnum.size()>0);
+        Assert.assertTrue(positionsEnum.size()>0, "There are more then 0 positions");
 
         //4. Test positions, department and location is related to QA
 
         for (WebElement position: positionsEnum) {
             //Checking Position Title
             WebElement positionTitle = position.findElement(By.xpath("//p[contains(@class, 'position-title')]"));
+            String attribute = position.getAttribute("innerHTML");
             Assert.assertTrue(positionTitle.getAttribute("innerHTML").contains("Quality Assurance"));
             //Checking Position Department
             WebElement positionDepartment = position.findElement(By.xpath("//span[contains(@class, 'position-department')]"));
@@ -64,10 +114,6 @@ public class TaskExampleTest {
         }
 
         //5. Test View Role page
-
-        //Scroll to be able see/reach jobs elements
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-        js.executeScript("window.scrollBy(0,500)", "");
 
         //Move cursor to job container element to be able see/reach View Role button
         Actions action = new Actions(driver);
@@ -90,7 +136,6 @@ public class TaskExampleTest {
         String jobPageTitle = jobPageHeader.getText();
         //Compare Job title and Job position title are equal
         Assert.assertEquals("Titles on page and on job offer are not the same", jobTitle, jobPageTitle);
-
 
         driver.quit();
     }
