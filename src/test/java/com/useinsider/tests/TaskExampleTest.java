@@ -1,38 +1,20 @@
-package task.automation;
-import io.github.bonigarcia.wdm.WebDriverManager;
-import org.junit.Test;
-import org.junit.runners.Parameterized;
+package com.useinsider.tests;
 import org.openqa.selenium.*;
-import org.openqa.selenium.chrome.ChromeDriver;
 
 import org.openqa.selenium.interactions.Actions;
 import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-import org.testng.annotations.Parameters;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Optional;
 
-public class TaskExampleTest {
+public class TaskExampleTest extends BaseTest{
 
-    public static final String INSIDER_LINK = "https://useinsider.com/";
-    public static final String INSIDER_CAREERS_QA = "https://useinsider.com/careers/quality-assurance/";
 
-    public static void main(String[] args) {
-
-    System.setProperty("webdriver.chrome.driver", "C:\\TOOLS\\DRIVERS\\chromedriver.exe");
-      
-    WebDriver driver = new ChromeDriver();
-
+        @Test
         // 1. Test that Insider page is opened
-        driver.manage().timeouts().pageLoadTimeout(30, TimeUnit.MINUTES);
-        driver.manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
-        driver.manage().window().maximize();
-        driver.navigate().to(INSIDER_LINK);
+        public void canOpenInsiderPage() {
+        driver.navigate().to(config.getProperty("insiderLink"));
         Assert.assertNotNull(driver.getTitle());
 
         //2. Test Career page
@@ -43,7 +25,7 @@ public class TaskExampleTest {
         Assert.assertTrue(driver.findElement(By.xpath("//h2[contains(text(), 'Life at Insider')]")).isDisplayed());
 
         //3. Test all QA positions filters
-        driver.navigate().to(INSIDER_CAREERS_QA);
+        driver.navigate().to(config.getProperty("insiderCareersQA"));
         driver.findElement(By.linkText("Only Necessary")).click();
         driver.findElement(By.linkText("See all QA jobs")).click();
 
@@ -105,10 +87,9 @@ public class TaskExampleTest {
         List<WebElement> positionsEnum = driver.findElements(By.xpath("//div[contains(@class, 'position-list-item-wrapper')]"));
         Assert.assertTrue(positionsEnum.size()>0, "There are more then 0 positions");
 
-
         //4. Test positions, department and location is related to QA
 
-        for (WebElement position : positionsEnum) {
+        for (WebElement position: positionsEnum) {
             //Checking Position Title
             WebElement positionTitle = position.findElement(By.xpath("//p[contains(@class, 'position-title')]"));
             String attribute = position.getAttribute("innerHTML");
@@ -144,10 +125,8 @@ public class TaskExampleTest {
         String jobPageTitle = jobPageHeader.getText();
         //Compare Job title and Job position title are equal
         Assert.assertEquals("Titles on page and on job offer are not the same", jobTitle, jobPageTitle);
-    }
 
         driver.quit();
-
     }
 
 }
