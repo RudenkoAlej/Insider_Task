@@ -29,8 +29,6 @@ public class BaseTest {
         driver.manage().timeouts().pageLoadTimeout(5, TimeUnit.MINUTES);
         driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
         driver.manage().window().maximize();
-//        driver.navigate().to(config.getProperty("insiderLink"));
-//        Assert.assertNotNull(driver.getTitle());
     }
 
     @AfterMethod
