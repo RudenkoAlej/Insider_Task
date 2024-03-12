@@ -2,11 +2,9 @@ package com.useinsider.tests;
 import com.useinsider.pages.*;
 import org.openqa.selenium.*;
 
-import org.openqa.selenium.interactions.Actions;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class TaskExampleTest extends BaseTest{
@@ -52,7 +50,8 @@ public class TaskExampleTest extends BaseTest{
                     //Scroll to be able see/reach jobs elements
                     .scrollForSpecificDistance(500);
 
-            Assert.assertTrue(insiderQAPage.getNumberOfPosition() > 0, "There are more then 0 positions");
+            Assert.assertTrue(insiderQAPage.getNumberOfPosition() > 0, "Filters are selected successfully." +
+                    " And there are more then 0 positions");
         }
 
         @Test

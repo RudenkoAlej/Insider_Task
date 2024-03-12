@@ -9,6 +9,7 @@ import org.openqa.selenium.support.PageFactory;
 import com.useinsider.utils.TestHelper;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 
 public class InsiderQAPage extends MainPage {
@@ -17,6 +18,18 @@ public class InsiderQAPage extends MainPage {
 
     @FindBy(linkText = "See all QA jobs")
     private WebElement SeeAllQABtn;
+
+    @FindBy(xpath = "//*[@name='filter-by-location']/following-sibling::span//*[@class='select2-selection__rendered']")
+    private WebElement locationFilterSelectedOption;
+
+    @FindBy(xpath = "//*[@name='filter-by-location']/following-sibling::span//b[contains(@role, 'presentation')]")
+    private WebElement locationFilterExpandListArrow;
+
+    @FindBy(xpath = "//*[@name='filter-by-department']/following-sibling::span//*[@class='select2-selection__rendered']")
+    private WebElement departmentFilterSelectedOption;
+
+    @FindBy(xpath = "//*[@name='filter-by-department']/following-sibling::span//b[contains(@role, 'presentation')]")
+    private WebElement departmentFilterExpandListArrow;
 
     public InsiderQAPage(WebDriver driver) {
         super(driver);
@@ -42,22 +55,28 @@ public class InsiderQAPage extends MainPage {
 
     public InsiderQAPage setLocationFilter (String locationFilterValue) {
         boolean locationOptionAbsent = true;
+        int locationSearchCount = 0;
 
         while (locationOptionAbsent) {
-            WebElement locationFilterSelectedOption = driver.findElement(By.xpath("//*[@name='filter-by-location']/following-sibling::span//*[@class='select2-selection__rendered']"));
             if (!locationFilterSelectedOption.getAttribute("title").contains(locationFilterValue)) {
-                driver.findElement(By.xpath("//*[@name='filter-by-location']/following-sibling::span//b[contains(@role, 'presentation')]")).click();
+                locationFilterExpandListArrow.click();
                 try {
-                    WebElement locationFilterOptionToSelect = driver.findElement(By.xpath("//li[contains(text(), '"+ locationFilterValue+"')]"));
+                    WebElement locationFilterOptionToSelect = driver.findElement(By.xpath("//li[contains(text(), '"
+                            + locationFilterValue+"')]"));
                     locationFilterOptionToSelect.click();
-                    locationOptionAbsent = false;
+                    break;
                 } catch (org.openqa.selenium.NoSuchElementException e) {
                     e.printStackTrace();
-                    driver.findElement(By.xpath("//*[@name='filter-by-location']/following-sibling::span//b[contains(@role, 'presentation')]")).click();
+                    locationFilterExpandListArrow.click();
+                    locationSearchCount++;
+                    if (locationSearchCount > 3 ) {
+                        throw new NoSuchElementException("There is no Option in the Location Filter with the name : "
+                                + locationFilterValue + ". Please check the spelling!");
+                    }
                 }
             } else {
                 System.out.println("Expected location " + locationFilterValue + " is already selected");
-                locationOptionAbsent = false;
+                break;
             }
 
         }
@@ -66,25 +85,30 @@ public class InsiderQAPage extends MainPage {
 
     public InsiderQAPage setDepartmentFilter (String departmentFilterValue) {
         boolean departmentOptionAbsent = true;
+        int departmentSearchCount = 0;
 
 
         while (departmentOptionAbsent) {
-            WebElement departmentFilterSelectedOption = driver.findElement(By.xpath("//*[@name='filter-by-department']/following-sibling::span//*[@class='select2-selection__rendered']"));
             if (!departmentFilterSelectedOption.getAttribute("title").contains(departmentFilterValue)) {
-                driver.findElement(By.xpath("//*[@name='filter-by-department']/following-sibling::span//b[contains(@role, 'presentation')]")).click();
+                departmentFilterExpandListArrow.click();
                 try {
-                    WebElement locationFilterOptionToSelect = driver.findElement(By.xpath("//li[contains(text(), '"+departmentFilterValue+"')]"));
+                    WebElement locationFilterOptionToSelect = driver.findElement(By.xpath("//li[contains(text(), '"
+                            +departmentFilterValue+"')]"));
                     locationFilterOptionToSelect.click();
-                    departmentOptionAbsent = false;
+                    break;
                 } catch (org.openqa.selenium.NoSuchElementException e) {
                     e.printStackTrace();
-                    driver.findElement(By.xpath("//*[@name='filter-by-department']/following-sibling::span//b[contains(@role, 'presentation')]")).click();
+                    departmentFilterExpandListArrow.click();
+                    departmentSearchCount++;
+                    if (departmentSearchCount > 3 ) {
+                        throw new NoSuchElementException("There is no Option in the Location Filter with the name : "
+                                + departmentFilterValue + ". Please check the spelling!");
+                    }
                 }
             } else {
-                System.out.println("Expected department "+departmentFilterValue+" is already selected");
-                departmentOptionAbsent = false;
+                System.out.println("Expected department "+ departmentFilterValue +" is already selected");
+                break;
             }
-
         }
         return this;
     }
